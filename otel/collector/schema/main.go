@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go/build"
 	"log"
 	"os"
 
@@ -41,7 +42,6 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/groupbyattrsprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/groupbytraceprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/k8sattributesprocessor"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/logstransformprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricsgenerationprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor"
@@ -66,13 +66,10 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/dockerstatsreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/dotnetdiagnosticsreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/elasticsearchreceiver"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/filelogreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/fluentforwardreceiver"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/httpcheckreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/jaegerreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/jmxreceiver"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/journaldreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/k8sclusterreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/k8seventsreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/k8sobjectsreceiver"
@@ -86,7 +83,6 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/nginxreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/opencensusreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/oracledbreceiver"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/otlpjsonfilereceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/podmanreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/postgresqlreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusexecreceiver"
@@ -99,9 +95,6 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/sqlqueryreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/sqlserverreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/statsdreceiver"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/syslogreceiver"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/tcplogreceiver"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/udplogreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zookeeperreceiver"
 	"go.opentelemetry.io/collector/service"
@@ -110,8 +103,7 @@ import (
 )
 
 func modCacheLoc() string {
-	// TODO: make this configurable
-	return "/Users/srikanthccv/go/pkg/mod"
+	return build.Default.GOPATH + "/pkg/mod"
 }
 
 func koanfLoad(b []byte, err error) *koanf.Koanf {
@@ -261,13 +253,14 @@ func receivers(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 	dockerstats := koanfLoad(r.Reflect(&dockerstatsreceiver.Config{}).MarshalJSON())
 	dotnetdiagnostics := koanfLoad(r.Reflect(&dotnetdiagnosticsreceiver.Config{}).MarshalJSON())
 	elasticsearch := koanfLoad(r.Reflect(&elasticsearchreceiver.Config{}).MarshalJSON())
-	filelog := koanfLoad(r.Reflect(&filelogreceiver.FileLogConfig{}).MarshalJSON())
+	// filelog := koanfLoad(r.Reflect(&filelogreceiver.FileLogConfig{}).MarshalJSON())
 	fluentforward := koanfLoad(r.Reflect(&fluentforwardreceiver.Config{}).MarshalJSON())
-	hostmetrics := koanfLoad(r.Reflect(&hostmetricsreceiver.Config{}).MarshalJSON())
+	// TODO: https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/6816bc1448c01f168bf7cf07bb0cea3256b19a66/receiver/hostmetricsreceiver/config.go#L25
+	// hostmetrics := koanfLoad(r.Reflect(&hostmetricsreceiver.Config{}).MarshalJSON())
 	httpcheck := koanfLoad(r.Reflect(&httpcheckreceiver.Config{}).MarshalJSON())
 	jaeger := koanfLoad(r.Reflect(&jaegerreceiver.Config{}).MarshalJSON())
 	jmx := koanfLoad(r.Reflect(&jmxreceiver.Config{}).MarshalJSON())
-	journald := koanfLoad(r.Reflect(&journaldreceiver.JournaldConfig{}).MarshalJSON())
+	// journald := koanfLoad(r.Reflect(&journaldreceiver.JournaldConfig{}).MarshalJSON())
 	k8scluster := koanfLoad(r.Reflect(&k8sclusterreceiver.Config{}).MarshalJSON())
 	k8sevents := koanfLoad(r.Reflect(&k8seventsreceiver.Config{}).MarshalJSON())
 	k8sobjects := koanfLoad(r.Reflect(&k8sobjectsreceiver.Config{}).MarshalJSON())
@@ -281,7 +274,7 @@ func receivers(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 	nginx := koanfLoad(r.Reflect(&nginxreceiver.Config{}).MarshalJSON())
 	opencensus := koanfLoad(r.Reflect(&opencensusreceiver.Config{}).MarshalJSON())
 	oracledb := koanfLoad(r.Reflect(&oracledbreceiver.Config{}).MarshalJSON())
-	otlpjsonfile := koanfLoad(r.Reflect(&otlpjsonfilereceiver.Config{}).MarshalJSON())
+	// otlpjsonfile := koanfLoad(r.Reflect(&otlpjsonfilereceiver.Config{}).MarshalJSON())
 	podman := koanfLoad(r.Reflect(&podmanreceiver.Config{}).MarshalJSON())
 	postgresql := koanfLoad(r.Reflect(&postgresqlreceiver.Config{}).MarshalJSON())
 	prometheusexec := koanfLoad(r.Reflect(&prometheusexecreceiver.Config{}).MarshalJSON())
@@ -294,9 +287,9 @@ func receivers(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 	sqlquery := koanfLoad(r.Reflect(&sqlqueryreceiver.Config{}).MarshalJSON())
 	sqlserver := koanfLoad(r.Reflect(&sqlserverreceiver.Config{}).MarshalJSON())
 	statsd := koanfLoad(r.Reflect(&statsdreceiver.Config{}).MarshalJSON())
-	syslog := koanfLoad(r.Reflect(&syslogreceiver.SysLogConfig{}).MarshalJSON())
-	tcplog := koanfLoad(r.Reflect(&tcplogreceiver.TCPLogConfig{}).MarshalJSON())
-	udplog := koanfLoad(r.Reflect(&udplogreceiver.UDPLogConfig{}).MarshalJSON())
+	// syslog := koanfLoad(r.Reflect(&syslogreceiver.SysLogConfig{}).MarshalJSON())
+	// tcplog := koanfLoad(r.Reflect(&tcplogreceiver.TCPLogConfig{}).MarshalJSON())
+	// udplog := koanfLoad(r.Reflect(&udplogreceiver.UDPLogConfig{}).MarshalJSON())
 	zipkin := koanfLoad(r.Reflect(&zipkinreceiver.Config{}).MarshalJSON())
 	zookeeper := koanfLoad(r.Reflect(&zookeeperreceiver.Config{}).MarshalJSON())
 
@@ -312,13 +305,13 @@ func receivers(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 		dockerstats,
 		dotnetdiagnostics,
 		elasticsearch,
-		filelog,
+		// filelog,
 		fluentforward,
-		hostmetrics,
+		// hostmetrics,
 		httpcheck,
 		jaeger,
 		jmx,
-		journald,
+		// journald,
 		k8scluster,
 		k8sevents,
 		k8sobjects,
@@ -332,7 +325,7 @@ func receivers(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 		nginx,
 		opencensus,
 		oracledb,
-		otlpjsonfile,
+		// otlpjsonfile,
 		podman,
 		postgresql,
 		prometheusexec,
@@ -345,9 +338,9 @@ func receivers(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 		sqlquery,
 		sqlserver,
 		statsd,
-		syslog,
-		tcplog,
-		udplog,
+		// syslog,
+		// tcplog,
+		// udplog,
 		zipkin,
 		zookeeper,
 	}
@@ -367,13 +360,13 @@ func receivers(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 			"^dockerstats(\\/.+)?$":            {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.dockerstatsreceiver.Config"},
 			"^dotnetdiagnostics(\\/.+)?$":      {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.dotnetdiagnosticsreceiver.Config"},
 			"^elasticsearch(\\/.+)?$":          {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.elasticsearchreceiver.Config"},
-			"^filelog(\\/.+)?$":                {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.filelogreceiver.FileLogConfig"},
+			"^filelog(\\/.+)?$":                { /*Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.filelogreceiver.FileLogConfig"*/ },
 			"^fluentforward(\\/.+)?$":          {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.fluentforwardreceiver.Config"},
-			"^hostmetrics(\\/.+)?$":            {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.hostmetricsreceiver.Config"},
+			"^hostmetrics(\\/.+)?$":            { /*Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.hostmetricsreceiver.Config"*/ },
 			"^httpcheck(\\/.+)?$":              {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.httpcheckreceiver.Config"},
 			"^jaeger(\\/.+)?$":                 {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.jaegerreceiver.Config"},
 			"^jmx(\\/.+)?$":                    {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.jmxreceiver.Config"},
-			"^journald(\\/.+)?$":               {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.journaldreceiver.JournaldConfig"},
+			"^journald(\\/.+)?$":               { /*Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.journaldreceiver.JournaldConfig"*/ },
 			"^k8scluster(\\/.+)?$":             {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.k8sclusterreceiver.Config"},
 			"^k8sevents(\\/.+)?$":              {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.k8seventsreceiver.Config"},
 			"^k8sobjects(\\/.+)?$":             {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.k8sobjectsreceiver.Config"},
@@ -387,7 +380,7 @@ func receivers(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 			"^nginx(\\/.+)?$":                  {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.nginxreceiver.Config"},
 			"^opencensus(\\/.+)?$":             {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.opencensusreceiver.Config"},
 			"^oracledb(\\/.+)?$":               {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.oracledbreceiver.Config"},
-			"^otlpjsonfile(\\/.+)?$":           {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.otlpjsonfilereceiver.Config"},
+			"^otlpjsonfile(\\/.+)?$":           { /*Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.otlpjsonfilereceiver.Config"*/ },
 			"^podman(\\/.+)?$":                 {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.podmanreceiver.Config"},
 			"^postgresql(\\/.+)?$":             {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.postgresqlreceiver.Config"},
 			"^prometheusexec(\\/.+)?$":         {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.prometheusexecreceiver.Config"},
@@ -400,9 +393,9 @@ func receivers(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 			"^sqlquery(\\/.+)?$":               {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.sqlqueryreceiver.Config"},
 			"^sqlserver(\\/.+)?$":              {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.sqlserverreceiver.Config"},
 			"^statsd(\\/.+)?$":                 {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.statsdreceiver.Config"},
-			"^syslog(\\/.+)?$":                 {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.syslogreceiver.SysLogConfig"},
-			"^tcplog(\\/.+)?$":                 {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.tcplogreceiver.TCPLogConfig"},
-			"^udplog(\\/.+)?$":                 {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.udplogreceiver.UDPLogConfig"},
+			"^syslog(\\/.+)?$":                 { /*Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.syslogreceiver.SysLogConfig"*/ },
+			"^tcplog(\\/.+)?$":                 { /*Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.tcplogreceiver.TCPLogConfig"*/ },
+			"^udplog(\\/.+)?$":                 { /*Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.udplogreceiver.UDPLogConfig"*/ },
 			"^zipkin(\\/.+)?$":                 {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.zipkinreceiver.Config"},
 			"^zookeeper(\\/.+)?$":              {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.receiver.zookeeperreceiver.Config"},
 		},
@@ -418,7 +411,7 @@ func processors(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 	groupbyattrs := koanfLoad(r.Reflect(&groupbyattrsprocessor.Config{}).MarshalJSON())
 	groupbytrace := koanfLoad(r.Reflect(&groupbytraceprocessor.Config{}).MarshalJSON())
 	k8sattributes := koanfLoad(r.Reflect(&k8sattributesprocessor.Config{}).MarshalJSON())
-	logstransform := koanfLoad(r.Reflect(&logstransformprocessor.Config{}).MarshalJSON())
+	// logstransform := koanfLoad(r.Reflect(&logstransformprocessor.Config{}).MarshalJSON())
 	metricsgeneration := koanfLoad(r.Reflect(&metricsgenerationprocessor.Config{}).MarshalJSON())
 	metricstransform := koanfLoad(r.Reflect(&metricstransformprocessor.Config{}).MarshalJSON())
 	probabilisticsampler := koanfLoad(r.Reflect(&probabilisticsamplerprocessor.Config{}).MarshalJSON())
@@ -441,7 +434,7 @@ func processors(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 		groupbyattrs,
 		groupbytrace,
 		k8sattributes,
-		logstransform,
+		// logstransform,
 		metricsgeneration,
 		metricstransform,
 		probabilisticsampler,
@@ -468,7 +461,7 @@ func processors(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 			"^groupbyattrs(\\/.+)?$":         {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.processor.groupbyattrsprocessor.Config"},
 			"^groupbytrace(\\/.+)?$":         {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.processor.groupbytraceprocessor.Config"},
 			"^k8sattributes(\\/.+)?$":        {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.processor.k8sattributesprocessor.Config"},
-			"^logstransform(\\/.+)?$":        {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.processor.logstransformprocessor.Config"},
+			"^logstransform(\\/.+)?$":        { /*Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.processor.logstransformprocessor.Config"*/ },
 			"^metricsgeneration(\\/.+)?$":    {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.processor.metricsgenerationprocessor.Config"},
 			"^metricstransform(\\/.+)?$":     {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.processor.metricstransformprocessor.Config"},
 			"^probabilisticsampler(\\/.+)?$": {Ref: "#/$defs/github.com.open-telemetry.opentelemetry-collector-contrib.processor.probabilisticsamplerprocessor.Config"},
@@ -488,6 +481,7 @@ func processors(r *jsonschema.Reflector) ([]*koanf.Koanf, *jsonschema.Schema) {
 }
 
 func main() {
+
 	r := new(jsonschema.Reflector)
 	r.Anonymous = true
 	if err := r.AddGoComments("", fmt.Sprintf("%s/go.opentelemetry.io/collector", modCacheLoc())); err != nil {

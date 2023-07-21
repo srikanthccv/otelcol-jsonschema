@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/iancoleman/orderedmap"
+	"go.opentelemetry.io/collector/component"
 )
 
 // Version is the JSON Schema version.
@@ -81,13 +82,14 @@ type Schema struct {
 	ContentMediaType string  `json:"contentMediaType,omitempty"` // section 8.4
 	ContentSchema    *Schema `json:"contentSchema,omitempty"`    // section 8.5
 	// RFC draft-bhutton-json-schema-validation-00, section 9
-	Title       string        `json:"title,omitempty"`       // section 9.1
-	Description string        `json:"description,omitempty"` // section 9.1
-	Default     interface{}   `json:"default,omitempty"`     // section 9.2
-	Deprecated  bool          `json:"deprecated,omitempty"`  // section 9.3
-	ReadOnly    bool          `json:"readOnly,omitempty"`    // section 9.4
-	WriteOnly   bool          `json:"writeOnly,omitempty"`   // section 9.4
-	Examples    []interface{} `json:"examples,omitempty"`    // section 9.5
+	Title               string        `json:"title,omitempty"`       // section 9.1
+	Description         string        `json:"description,omitempty"` // section 9.1
+	MarkDownDescription string        `json:"markdownDescription,omitempty"`
+	Default             interface{}   `json:"default,omitempty"`    // section 9.2
+	Deprecated          bool          `json:"deprecated,omitempty"` // section 9.3
+	ReadOnly            bool          `json:"readOnly,omitempty"`   // section 9.4
+	WriteOnly           bool          `json:"writeOnly,omitempty"`  // section 9.4
+	Examples            []interface{} `json:"examples,omitempty"`   // section 9.5
 
 	Extras map[string]interface{} `json:"-"`
 
@@ -281,9 +283,11 @@ type Definitions map[string]*Schema
 // Available Go defined types for JSON Schema Validation.
 // RFC draft-wright-json-schema-validation-00, section 7.3
 var (
-	timeType = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
-	ipType   = reflect.TypeOf(net.IP{})    // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
-	uriType  = reflect.TypeOf(url.URL{})   // uri RFC section 7.3.6
+	timeType        = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
+	ipType          = reflect.TypeOf(net.IP{})    // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
+	uriType         = reflect.TypeOf(url.URL{})   // uri RFC section 7.3.6
+	componentIDType = reflect.TypeOf(component.ID{})
+	durationType    = reflect.TypeOf(time.Duration(0))
 )
 
 // Byte slices will be encoded as base64
@@ -389,6 +393,10 @@ func (r *Reflector) reflectTypeToSchema(definitions Definitions, t reflect.Type)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		st.Type = "integer"
+		// for duration, we want to use the string format
+		if t == durationType {
+			st.Type = "string"
+		}
 
 	case reflect.Float32, reflect.Float64:
 		st.Type = "number"
@@ -505,12 +513,18 @@ func (r *Reflector) reflectStruct(definitions Definitions, t reflect.Type, s *Sc
 		s.Type = "string"
 		s.Format = "uri"
 		return
+	case componentIDType: // For pipeline components
+		s.Type = "string"
+		return
 	}
 
 	r.addDefinition(definitions, t, s)
 	s.Type = "object"
 	s.Properties = orderedmap.New()
 	s.Description = r.lookupComment(t, "")
+	if m := r.lookupMarkdownComment(t, ""); m != "" {
+		s.MarkDownDescription = m
+	}
 	if r.AssignAnchor {
 		s.Anchor = t.Name()
 	}
@@ -616,6 +630,20 @@ func (r *Reflector) lookupComment(t reflect.Type, name string) string {
 	if name != "" {
 		n = n + "." + name
 	}
+
+	return r.CommentMap[n]
+}
+
+func (r *Reflector) lookupMarkdownComment(t reflect.Type, name string) string {
+	if r.CommentMap == nil {
+		return ""
+	}
+
+	n := fullyQualifiedTypeName(t)
+	if name != "" {
+		n = n + "." + name
+	}
+	n = n + ".markdownDescription"
 
 	return r.CommentMap[n]
 }

@@ -3,14 +3,26 @@ package jsonschema
 import (
 	"fmt"
 	"io/fs"
+	"os"
 	gopath "path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"go/ast"
+	"go/build"
 	"go/doc"
 	"go/parser"
 	"go/token"
+)
+
+func modCacheLoc() string {
+	return build.Default.GOPATH + "/pkg/mod/"
+}
+
+var (
+	semVerRegexCompiled = regexp.MustCompile(`\@v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`)
+	modCacheRegex       = regexp.MustCompile(fmt.Sprintf(`^%s`, modCacheLoc()))
 )
 
 // ExtractGoComments will read all the go files contained in the provided path,
@@ -65,10 +77,28 @@ func ExtractGoComments(base, path string, commentMap map[string]string) error {
 							gtxt = ""
 						}
 						txt = doc.Synopsis(txt)
-						pkg = strings.Replace(pkg, "@v0.81.0", "", -1)
-						pkg = strings.Replace(pkg, "/Users/srikanthccv/go/pkg/mod/", "", -1)
-						// pkg = strings.Replace(pkg, "go/pkg/mod/github.com/open-telemetry/opentelemetry-collector-contrib", "", -1)
+						// check if README.md exists in the directory
+						// if so, use the contents as the description
+						// for "markdownDescription"
+						var markdownDescription string
+
+						readmePath := filepath.Join(pkg, "README.md")
+						if _, err := fs.Stat(os.DirFS(pkg), "README.md"); err == nil {
+							// read the file
+							data, err := os.ReadFile(readmePath)
+							if err == nil {
+								markdownDescription = string(data)
+							}
+						}
+
+						// remove semver from the pkg
+						pkg = semVerRegexCompiled.ReplaceAllString(pkg, "")
+						// remove the mod cache path
+						pkg = modCacheRegex.ReplaceAllString(pkg, "")
 						commentMap[fmt.Sprintf("%s.%s", pkg, typ)] = strings.TrimSpace(txt)
+						if markdownDescription != "" {
+							commentMap[fmt.Sprintf("%s.%s.markdownDescription", pkg, typ)] = strings.TrimSpace(markdownDescription)
+						}
 					}
 				case *ast.Field:
 					txt := x.Doc.Text()
