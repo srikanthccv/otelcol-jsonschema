@@ -8,6 +8,13 @@ This repository contains the [JSON Schema](https://json-schema.org/) for the OTE
 - Get auto-completion and validation of the configuration file.
 - And all other benefits of using a JSON Schema.
 
+## Demo
+
+
+https://github.com/srikanthccv/otelcol-jsonschema/assets/22846633/f4150323-e588-4760-85da-88fb8d04b37d
+
+
+
 ## Usage
 
 The schema is available at https://raw.githubusercontent.com/srikanthccv/otelcol-jsonschema/main/schema.json. Many popular editors and IDEs support YAML validation against a JSON Schema. For example, in VS Code, you can add the following to your `settings.json`:
