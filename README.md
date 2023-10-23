@@ -1,3 +1,7 @@
+
+_There is a [proposal](https://docs.google.com/document/d/15SMsJAdE1BHAmwf8cLXBvsHDrezXOHniaRZafjO-5e4/edit) and work-in-progress PR for generating the component config from the YAML or JSON Schema [here](https://github.com/open-telemetry/opentelemetry-collector-contrib/pull/27003). I am not working on perfecting this, but it was a fun and good learning experience_
+
+
 # OpenTelemetry Collector JSON Schema
 
 This repository contains the [JSON Schema](https://json-schema.org/) for the OTEL Collector YAML configuration file.
